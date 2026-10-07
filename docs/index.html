@@ -1,0 +1,115 @@
+<!doctype html>
+<html>
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<title>ChainMon</title>
+<style>
+body{margin:0;font-family:Verdana,Arial,sans-serif;background:#cdeefd;width:1280px;height:720px;overflow:hidden;}
+.header{background:#2e7d32;color:#fff;padding:10px 20px;}
+.header h1{margin:0;font-size:24px;}
+.header p{margin:2px 0 0;font-size:13px;}
+.main{display:flex;gap:14px;padding:14px;}
+.panel{background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 4px rgba(0,0,0,.15);}
+.map{width:300px;height:560px;}
+.map button{display:block;width:100%;margin:6px 0;padding:10px;border:none;border-radius:8px;background:#81c784;color:#1b3a1b;font-size:14px;cursor:pointer;}
+.map button.active{background:#4caf50;color:#fff;}
+.explore{margin-top:20px;background:#ffb300!important;color:#4a2c00!important;font-weight:bold;}
+.encounter{width:360px;height:560px;text-align:center;}
+.encounter .mon{font-size:70px;margin:20px 0;}
+.hidden{display:none;}
+.catchbtn{padding:12px 20px;background:#e53935;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;}
+.collection{width:400px;height:560px;overflow:auto;}
+.collection h3{margin-top:0;}
+.card{display:flex;align-items:center;gap:10px;border:2px solid #ddd;border-radius:10px;padding:8px;margin-bottom:8px;cursor:pointer;}
+.card .emoji{font-size:32px;}
+.badge{font-size:10px;background:#5e35b1;color:#fff;padding:2px 6px;border-radius:6px;margin-left:auto;}
+.battle{margin-top:10px;background:#fff3e0;border-radius:10px;padding:10px;}
+.hpbar{height:10px;background:#ccc;border-radius:5px;overflow:hidden;margin:6px 0;}
+.hpfill{height:100%;background:#4caf50;width:100%;}
+.moves{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+.moves button{padding:8px;border:none;border-radius:6px;background:#64b5f6;color:#fff;cursor:pointer;}
+.levelup{margin-top:8px;background:#fff9c4;border-radius:8px;padding:8px;font-size:13px;}
+footer{position:absolute;bottom:4px;left:14px;font-size:11px;color:#555;}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>ChainMon</h1>
+  <p>小学生でも遊べる、Solana上の血統が刻まれるモンスター収集RPG</p>
+</div>
+<div class="main">
+  <div class="panel map">
+    <h3>Town Map</h3>
+    <button class="active">Zone 1: Tall Grass</button>
+    <button>Zone 2: Forest (locked)</button>
+    <button>Zone 3: Cave (locked)</button>
+    <button class="explore" data-demo="explore-btn" onclick="explore()">Explore Zone 1</button>
+    <p id="map-hint" style="font-size:12px;color:#555;">Click Explore to find a wild monster!</p>
+  </div>
+
+  <div class="panel encounter">
+    <h3>Encounter</h3>
+    <div id="idle-msg">No monster yet. Explore the grass!</div>
+    <div id="encounter-panel" class="hidden" data-demo="encounter-panel">
+      <div class="mon">🦎</div>
+      <p>A wild <b>Sparkitty</b> appeared!</p>
+      <button class="catchbtn" data-demo="catch-btn" onclick="catchMon()">Tap to Catch!</button>
+    </div>
+    <div id="caught-msg" class="hidden" style="margin-top:10px;color:#2e7d32;font-weight:bold;">Caught! Minted as cNFT 🎉</div>
+  </div>
+
+  <div class="panel collection">
+    <h3>My Monsters</h3>
+    <div id="no-mon" style="font-size:13px;color:#777;">No monsters yet.</div>
+    <div id="monster-card-1" class="card hidden" data-demo="monster-card-1" onclick="openBattle()">
+      <div class="emoji">🦎</div>
+      <div>
+        <div><b>Sparkitty</b> <span id="lv-label">Lv 1</span></div>
+        <div style="font-size:11px;color:#777">HP 20/20</div>
+      </div>
+      <div class="badge" id="chain-badge-1" data-demo="chain-badge-1">on-chain #0042</div>
+    </div>
+
+    <div id="battle-panel" class="battle hidden">
+      <b>Battle: Sparkitty vs Wild Rockun</b>
+      <div class="hpbar"><div class="hpfill" id="hpfill"></div></div>
+      <div id="battle-log" style="font-size:12px;min-height:16px;">Choose a move!</div>
+      <div class="moves">
+        <button data-demo="move-1" onclick="useMove('Tackle',8)">Tackle</button>
+        <button data-demo="move-2" onclick="useMove('Spark Bite',6)">Spark Bite</button>
+        <button data-demo="move-3" onclick="useMove('Guard',0)">Guard</button>
+        <button data-demo="move-4" onclick="useMove('Cheer',0)">Cheer</button>
+      </div>
+      <div id="levelup-panel" class="levelup hidden" data-demo="levelup-panel">⬆️ Level Up! Now Lv 2 — synced to Solana devnet ✅</div>
+    </div>
+  </div>
+</div>
+<footer>Prototype — all data is simulated</footer>
+<script>
+function explore(){
+  document.getElementById('idle-msg').classList.add('hidden');
+  document.getElementById('encounter-panel').classList.remove('hidden');
+}
+function catchMon(){
+  document.getElementById('encounter-panel').classList.add('hidden');
+  document.getElementById('caught-msg').classList.remove('hidden');
+  document.getElementById('no-mon').classList.add('hidden');
+  document.getElementById('monster-card-1').classList.remove('hidden');
+}
+function openBattle(){
+  document.getElementById('battle-panel').classList.remove('hidden');
+}
+var hp=100, leveled=false;
+function useMove(name,dmg){
+  if(dmg>0){ hp=Math.max(0,hp-dmg); document.getElementById('hpfill').style.width=hp+'%'; }
+  document.getElementById('battle-log').innerText=name+' used! '+(dmg>0?('Dealt '+dmg+' damage.'):'No damage, but good move!');
+  if(!leveled){
+    leveled=true;
+    document.getElementById('levelup-panel').classList.remove('hidden');
+    document.getElementById('lv-label').innerText='Lv 2';
+    document.getElementById('chain-badge-1').innerText='on-chain #0042 ✓';
+  }
+}
+</script>
+</body>
+</html>
